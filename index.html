@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Javascript practice</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="main-container">
+    <h1>Javascript Concepts!</h1>
+
+    <div class="card">
+        <h2>Budget Tracker</h2>
+        <h3>Total money is :
+            <div class="budget-input"><input type="number" name="" id="totalMoney"> 
+            <button class="getBudget">Get Budget</button></div>
+        </h3>
+
+        
+        <form action="" class="formData">
+            <div class="input-wrapper">
+                <input type="text" id="moneySpend" placeholder="name...">
+                <input type="number" id="price" placeholder="amount...">
+            </div>
+            <button type="submit" class="submit-btn">Add</button>
+        </form>
+
+        <ul class="budget-ul">
+            </ul>
+
+        <div class="summary">
+            <div>Total money spend: <span class="budgetSpend">0</span></div>
+            <div class="total-left">Total money left: <span class="budgetLeft">25000</span></div>
+        </div>
+    </div>
+</div>
+
+    <script type="module" src="js/budgetTracker.js"></script>
+</body>
+</html>
