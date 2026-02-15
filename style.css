@@ -38,14 +38,16 @@ h2 {
 }
 
 /* New Budget Input Section */
-h3 { 
+
+.balance-container {
     font-size: 0.9rem; 
     margin: 15px 0; 
     color: #718096;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 5px;
 }
+
 
 .budget-input {
     display: flex;

@@ -9,14 +9,17 @@
 </head>
 <body>
     <div class="main-container">
-    <h1>Javascript Concepts!</h1>
+    <h1>Calculate Your Budget!</h1>
 
     <div class="card">
         <h2>Budget Tracker</h2>
-        <h3>Total money is :
-            <div class="budget-input"><input type="number" name="" id="totalMoney"> 
-            <button class="getBudget">Get Budget</button></div>
-        </h3>
+        <div class="balance-container">
+            <h3>
+                Total money is : <span id="total-budget"></span>
+            </h3>
+                <div class="budget-input"><input type="number" name="" id="totalMoney"> 
+                <button type="button" class="getBudget">Get</button></div>
+        </div>
 
         
         <form action="" class="formData">
@@ -32,7 +35,7 @@
 
         <div class="summary">
             <div>Total money spend: <span class="budgetSpend">0</span></div>
-            <div class="total-left">Total money left: <span class="budgetLeft">25000</span></div>
+            <div class="total-left">Total money left: <span class="budgetLeft">0</span></div>
         </div>
     </div>
 </div>

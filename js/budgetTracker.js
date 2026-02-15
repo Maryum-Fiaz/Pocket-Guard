@@ -1,113 +1,132 @@
 // budget tracker
+import { saveExpense, getExpense } from "./storage.js";
+import { calculateMoneySpend, calculateMoneyLeft } from "./utils.js";
 
 // select items
-const moneySpend= document.getElementById('moneySpend');
-const price= document.getElementById('price');
-const form = document.querySelector('.formData')
-const submitBtn = document.querySelector('.submit-btn');
-const budgetSpend= document.querySelector('.budgetSpend');
-const budgetUl = document.querySelector('.budget-ul');
-const budgetLeft = document.querySelector('.budgetLeft');
-
+const moneySpend = document.getElementById("moneySpend");
+const price = document.getElementById("price");
+const form = document.querySelector(".formData");
+const submitBtn = document.querySelector(".submit-btn");
+const budgetSpend = document.querySelector(".budgetSpend");
+const budgetUl = document.querySelector(".budget-ul");
+const budgetLeft = document.querySelector(".budgetLeft");
 
 // *********** GETTING TOTAL BUDGET *************
-const totalMoneyInput = document.getElementById('totalMoney');
-const getBudget = document.querySelector('.getBudget');
-let totalMoney = 0;
+const totalMoneyInput = document.getElementById("totalMoney");
+const getBudget = document.querySelector(".getBudget");
+const budget = document.getElementById("total-budget");
 
-getBudget.addEventListener('click', ()=> {
-    totalMoney = totalMoneyInput.value;
-    budgetLeft.textContent = totalMoney;
-})
-console.log(totalMoney);
+budget.textContent = Number(getExpense("total_Budget"));
+let totalMoney = Number(getExpense("total_Budget"));
 
+budgetLeft.textContent = totalMoney;
 
+let buttonIsEdit = false; // if false, btn is submit. if true, btn is edit
 
-let buttonIsEdit = false;  // if false btn is submit, if true btn is edit
-// let arrOfBudgetObj = [];  vanishing data because of this
-
-let arrOfBudgetObj = JSON.parse(localStorage.getItem('budget_List')) || [];
-console.log(arrOfBudgetObj);
-
+let arrOfBudgetObj = JSON.parse(localStorage.getItem("budget_List")) || [];
 
 // ************ function call ***************
+// get list saved in localStorage
 addItemsToList(arrOfBudgetObj);
-console.log('money spend: ',calculateMoneySpend(arrOfBudgetObj));
-// calculateMoneySpend(arrOfBudgetObj)
+let checkspend = Number(calculateMoneySpend(arrOfBudgetObj));
+let checkLeft = Number(calculateMoneyLeft(checkspend));
 
-// ***************** local storage functions *****************
+//************* EVENT LISTENERS *************
 
-function saveExpense(value) {
-    console.log('value is: ',value);
-    localStorage.setItem('budget_List', JSON.stringify(value));
-}
+// 1.
+getBudget.addEventListener("click", (e) => {
+  totalMoney = Number(totalMoneyInput.value);
+  if (totalMoney === 0) {
+    alert("Not enough Balance!");
+    return;
+  }
+  if (checkspend > totalMoney) {
+    alert("Not enough Balance!");
+    return;
+  }
 
-function getExpense() {
-   return JSON.parse(localStorage.getItem('budget_List')) || [];
-}
+  saveExpense("total_Budget", totalMoney);
 
+  checkLeft = Number(calculateMoneyLeft(checkspend));
 
+  budget.textContent = totalMoney;
+  budgetLeft.textContent = checkLeft;
+  budgetSpend.textContent = checkspend;
+});
 
-//*************event listener to get data*************
-form.addEventListener('submit', (e) => {
-    e.preventDefault();
+// 2.
+form.addEventListener("submit", (e) => {
+  e.preventDefault();
 
-    // if fields are empty
-    if(!moneySpend.value || !price.value) {
-        console.log('Enter values...');
-        return;
+  // if fields are empty
+  if (!moneySpend.value || !price.value) {
+    alert("Enter values...");
+    return;
+  }
+
+  let priceValue = Number(price.value);
+  let currentSpend = Number(calculateMoneySpend(arrOfBudgetObj));
+  let currentBalanceLeft = Number(calculateMoneyLeft(currentSpend));
+
+  if (buttonIsEdit) {
+    const targetItem = arrOfBudgetObj.find((obj) => obj.id === editId);
+    const difference = priceValue - targetItem.amount;
+    if (currentBalanceLeft < difference) {
+      alert(
+        `Can't change to ${difference + targetItem.amount} as it's more than your balance!`,
+      );
+      return;
     }
-    if(!buttonIsEdit){  // false as buttonIsEdit is false submit btn will work
-        const newProduct = {
-            id: Date.now(),
-            name: moneySpend.value,
-            amount: Number(price.value),
-        }
-    
-    
-    
-        arrOfBudgetObj = [...arrOfBudgetObj, newProduct]
-        saveExpense(arrOfBudgetObj);
-
-        console.log('arr of obj: ', arrOfBudgetObj);
-    
-        addItemsToList(arrOfBudgetObj);
-
-    }   else {
-
-        // NOTE: button is 'Edit'
-        // changing values of name and amount
-        const arrOfBudgetObj2 = arrOfBudgetObj.map(obj => 
-            obj.id === editId ? {...obj, name: moneySpend.value, amount: Number(price.value)} : obj
-        )    // TODO fix this bug: arrOfBudgetObj2
-    
-        console.log('arrOfBudgetObj2 in edit: ', arrOfBudgetObj2);
-
-        saveExpense(arrOfBudgetObj2);
-        addItemsToList(arrOfBudgetObj2);
-
-        submitBtn.textContent = 'Add';
-        buttonIsEdit = false;
-
+  } else {
+    if (currentBalanceLeft < priceValue) {
+      alert("Not enough Balance!");
+      return;
     }
+  }
 
-    moneySpend.value = '';
-    price.value='';
-})
+  if (!buttonIsEdit) {
+    // false as buttonIsEdit is false, submit btn will work
+    const newProduct = {
+      id: Date.now(),
+      name: moneySpend.value,
+      amount: Number(price.value),
+    };
 
-console.log('arr of obj: ', arrOfBudgetObj);
+    arrOfBudgetObj = [...arrOfBudgetObj, newProduct];
+    saveExpense("budget_List", arrOfBudgetObj);
+
+    addItemsToList(arrOfBudgetObj);
+  } else {
+    // NOTE: button is 'Edit'
+    // changing values of name and amount
+    arrOfBudgetObj = arrOfBudgetObj.map((obj) =>
+      obj.id === editId
+        ? { ...obj, name: moneySpend.value, amount: Number(price.value) }
+        : obj,
+    );
+
+    saveExpense("budget_List", arrOfBudgetObj);
+    addItemsToList(arrOfBudgetObj);
+
+    submitBtn.textContent = "Add";
+    buttonIsEdit = false;
+  }
+
+  moneySpend.value = "";
+  price.value = "";
+});
 
 // ************ FUNCTIONS **************
+
 // 1. make list and add items in it
 
 function addItemsToList(budgetList) {
+  budgetUl.innerHTML = "";
+  let li = "";
 
-    budgetUl.innerHTML = '';
-    let li='';
-
-    budgetList.forEach(obj => {
-        li = document.createElement('li');
-        li.innerHTML = `
+  budgetList.forEach((obj) => {
+    li = document.createElement("li");
+    li.innerHTML = `
             <div data-id ="${obj.id}">
                 <span style="display:block; font-weight:600;">${obj.name}</span>
                 <span style="color:#94a3b8; font-size:0.8rem;">${obj.amount}</span>
@@ -117,90 +136,52 @@ function addItemsToList(budgetList) {
                 <span class="del-action" style="color:#f43f5e; cursor:pointer; font-size:0.8rem;">Del</span>
             </div>
             `;
-            li.setAttribute('data-id', obj.id);
-        budgetUl.appendChild(li);
-        
-    });
-    calculateMoneySpend(budgetList);
+    li.setAttribute("data-id", obj.id);
+    budgetUl.appendChild(li);
+  });
+  const moneySpend = Number(calculateMoneySpend(arrOfBudgetObj));
+  const moneyLeft = Number(calculateMoneyLeft(moneySpend));
+  budgetSpend.textContent = moneySpend;
+
+  budgetLeft.textContent = moneyLeft;
 }
-
-
-// 2. calculating budget
-
-function calculateMoneySpend(arrayOfObj) {
-    let initialValue = 0;
-
-    const spentMoney = arrayOfObj.reduce((acc, obj) => acc + obj.amount,
-    initialValue)
-    
-    calculateMoneyLeft(spentMoney)
-    return budgetSpend.textContent = spentMoney;
-}
-
-function calculateMoneyLeft(spentMoney){
-
-    const moneyLeft = totalMoney - spentMoney
-    if(moneyLeft < 0 ){
-        return budgetLeft.textContent = 'No money Left!'
-
-        }
-
-        return budgetLeft.textContent = moneyLeft;
-}
-
-// TODO: if money finish we show 'No money Left!' but list still increaing and money still adding in spentMoney, correct this
-
-
 
 // ************ DELETE/EDIT EVENT LISTENER ***********
 let editId = null;
 
-budgetUl.addEventListener('click', (e) => {
-    const li = e.target.closest('li');
-    
-    if(e.target.classList.contains('del-action')){
-        const itemToDel = e.target.closest('li');
+budgetUl.addEventListener("click", (e) => {
+  const li = e.target.closest("li");
 
-            const targetId = Number(li.dataset.id);
+  if (e.target.classList.contains("del-action")) {
+    const itemToDel = e.target.closest("li");
 
+    const targetId = Number(li.dataset.id);
 
-            if(itemToDel){
-                arrOfBudgetObj = arrOfBudgetObj.filter(obj => obj.id !== targetId);
-                saveExpense(arrOfBudgetObj)
-                addItemsToList(arrOfBudgetObj);
-                
-            }
+    if (itemToDel) {
+      arrOfBudgetObj = arrOfBudgetObj.filter((obj) => obj.id !== targetId);
+      saveExpense("budget_List", arrOfBudgetObj);
+      addItemsToList(arrOfBudgetObj);
     }
+  }
 
-    if(e.target.classList.contains('edit-action')){
-         console.log('edit clicked')
-         
-         const li = e.target.closest('li');
-         console.log(li);
+  if (e.target.classList.contains("edit-action")) {
+    console.log("edit clicked");
 
-         editId = Number(li.dataset.id);
-        console.log('editId ',editId);
+    const li = e.target.closest("li");
 
-        const targetObj = arrOfBudgetObj.find(obj => obj.id === editId);
+    editId = Number(li.dataset.id);
 
-        // putting both values in fields above to edit
-        console.log('targetObj: ', targetObj);
-        
-         moneySpend.value = targetObj.name;
-         price.value = Number(targetObj.amount);
-        // focusing on name field
-        moneySpend.focus()
-        
-        // changing btn text submit --> edit
-        submitBtn.textContent = 'Edit';
+    const targetObj = arrOfBudgetObj.find((obj) => obj.id === editId);
 
-        // doing it true so that we can now use submit btn as edit btn
-        buttonIsEdit = true;
+    moneySpend.value = targetObj.name;
+    price.value = Number(targetObj.amount);
+    // focusing on name field
+    moneySpend.focus();
 
+    // changing btn text submit --> edit
+    submitBtn.textContent = "Edit";
 
-
-
-    }
-
-})
-
+    // doing it true so that we can now use submit btn as edit btn
+    buttonIsEdit = true;
+  }
+});
